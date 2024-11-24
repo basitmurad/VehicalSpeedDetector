@@ -37,7 +37,7 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
 
     private static final String TAG = "MyService";
     private static final String CHANNEL_ID = "SpeedServiceChannel";
-    private static final float SPEED_THRESHOLD_KMH = 3.10f; // Threshold set to 1.0 km/h
+    private static final float SPEED_THRESHOLD_KMH = 0.30f; // Threshold set to 1.0 km/h
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private PowerManager.WakeLock wakeLock;
@@ -68,13 +68,25 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
                     float speed = location.getSpeed() * 3.6f; // Convert m/s to km/h
                     float accuracy = location.getAccuracy(); // Get accuracy in meters
 
-                    // Check for valid speed and accuracy
-                    if (accuracy < 50 && speed > SPEED_THRESHOLD_KMH) {
-                        Log.d(TAG, "Current speed (GPS): " + speed + " km/h");
-                        startVibration();
-                        lockDevice();
-                        Log.d(TAG, "Speed exceeds threshold. Vibration and phone lock triggered.");
+                    if (accuracy < 50) {
+                        if (speed > SPEED_THRESHOLD_KMH) {
+                            Log.d(TAG, "Current speed (GPS): " + speed + " km/h");
+                            startVibration();
+                            lockDevice();
+                            Log.d(TAG, "Speed exceeds threshold. Vibration and phone lock triggered.");
+                        } else if (speed < SPEED_THRESHOLD_KMH) {
+                            Log.d(TAG, "Current speed (GPS): " + speed + " km/h. Turning on screen.");
+                            turnOnScreen();
+                        }
                     }
+
+//                    // Check for valid speed and accuracy
+//                    if (accuracy < 50 && speed > SPEED_THRESHOLD_KMH) {
+//                        Log.d(TAG, "Current speed (GPS): " + speed + " km/h");
+//                        startVibration();
+//                        lockDevice();
+//                        Log.d(TAG, "Speed exceeds threshold. Vibration and phone lock triggered.");
+//                    }
 
                 }
             }
@@ -110,20 +122,7 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
         } else {
             stopSelf(); // Stop the service if it should not run
         }
-//        if (checkLocationPermissions()) {
-//            startLocationUpdates();
-//            motionTracker.startTracking();
-//            startForegroundService();
-//        } else {
-//            Log.e(TAG, "Permissions not granted. Cannot start location updates.");
-//            // Handle permission denial (e.g., notify user to grant permissions)
-//            requestPermissions();
-//        }
-//
-//        // Send broadcast to notify the activity
-//        Intent broadcastIntent = new Intent();
-//        broadcastIntent.setAction("restart_service");
-//        sendBroadcast(broadcastIntent);
+
         return START_STICKY;
     }
 
@@ -135,6 +134,20 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);  // Prompt user to manually grant permissions.
     }
+
+    private void turnOnScreen() {
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (powerManager != null) {
+            @SuppressLint("InvalidWakeLockTag")
+            PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "MyService:WakeLock"
+            );
+            wakeLock.acquire(3000); // Keep the screen on for 3 seconds
+            Log.d(TAG, "Screen turned on.");
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -220,17 +233,7 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
     @Override
     public void onMotionDetected(float speed, double latitude, double longitude, float accuracy) {
         Log.d(TAG, "Motion detected. Speed: " + speed + " m/s, Lat: " + latitude + ", Lon: " + longitude);
-////
-//        if (speed > SPEED_THRESHOLD_KMH) {
-//            releaseWakeLock();
-//
-//            startVibration();
-//            lockDevice();
-//        }
-//        else{
-//            acquireWakeLock();
-//
-//        }
+
 
 
     }
@@ -246,22 +249,7 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
             }
         }
     }
-    private void releaseWakeLock() {
-        if (wakeLock != null && wakeLock.isHeld()) {
-            wakeLock.release();
-            Log.d(TAG, "WakeLock released, screen will go to sleep.");
-        }
-    }
 
-    @SuppressLint("WakelockTimeout")
-    private void acquireWakeLock() {
-        if (wakeLock == null || !wakeLock.isHeld()) {
-            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "StepTrackerService::WakeLock");
-            wakeLock.acquire();
-            Log.d(TAG, "WakeLock acquired, screen will stay on.");
-        }
-    }
     // Lock the device if motion exceeds threshold
     private void lockDevice() {
         if (devicePolicyManager != null && devicePolicyManager.isAdminActive(deviceAdminReceiver)) {

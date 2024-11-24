@@ -82,49 +82,49 @@ public class MainActivity extends AppCompatActivity {
 
         componentName =  new ComponentName(this,  MyDeviceAdminReceiver.class);
 
-//        deviceAdminSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-//                if (isChecked) {
-//                    // Enable Device Admin
-//                    Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-//                    intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
-//                    intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "For lock screen");
-//                    startActivityForResult(intent, RESULT_ENABLE);
-//                } else {
-//                    // Prompt for Password
-//                    promptForPasswordAndDisableAdmin();
-//                }
-//            }
-//        });
+
 
 
         Intent intent = new Intent(MainActivity.this, MyService.class);
+//        button1.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Log.d("MainActivity", "Start Service clicked");
+//                SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
+//                prefs.edit().putBoolean(SERVICE_RUNNING_KEY, true).apply();
+//                startService(intent);
+//            }
+//        });
+
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d("MainActivity", "Start Service clicked");
-                SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
-                prefs.edit().putBoolean(SERVICE_RUNNING_KEY, true).apply();
-                startService(intent);
+
+                // Check if device admin permission is granted
+                if (devicePolicyManager.isAdminActive(componentName)) {
+                    // If admin permission is granted, start the service
+                    SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
+                    prefs.edit().putBoolean(SERVICE_RUNNING_KEY, true).apply();
+                    startService(intent);
+                    Toast.makeText(MainActivity.this, "Service started", Toast.LENGTH_SHORT).show();
+                } else {
+                    // If admin permission is not granted, request it
+                    Intent adminIntent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                    adminIntent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
+                    adminIntent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "This app requires admin privileges to function properly.");
+                    startActivityForResult(adminIntent, RESULT_ENABLE);
+                }
             }
         });
+
 
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 promptForPasswordAndStopService();
 
-//                Log.d("MainActivity", "Stop Service clicked");
-//                stopService(intent);
-//
-//                Log.d("MainActivity", "Stop Service clicked");
-//
-//                // Store that the service is stopped
-//                SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
-//                prefs.edit().putBoolean(SERVICE_RUNNING_KEY, false).apply();
-//
-//                stopService(intent);
+
                 }
         });
 
@@ -146,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     @SuppressLint("ObsoleteSdkInt")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -154,9 +153,9 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case RESULT_ENABLE:
                 if (resultCode == Activity.RESULT_OK) {
-                    Toast.makeText(this, "You have enabled device admin features", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Admin permission granted.", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(this, "Problem enabling device admin features", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Admin permission not granted. Please enable to proceed.", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case BATTERY_OPTIMIZATION_REQUEST_CODE:
@@ -174,6 +173,34 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+//    @SuppressLint("ObsoleteSdkInt")
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        switch (requestCode) {
+//            case RESULT_ENABLE:
+//                if (resultCode == Activity.RESULT_OK) {
+//                    Toast.makeText(this, "You have enabled device admin features", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    Toast.makeText(this, "Problem enabling device admin features", Toast.LENGTH_SHORT).show();
+//                }
+//                break;
+//            case BATTERY_OPTIMIZATION_REQUEST_CODE:
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                    String packageName = getPackageName();
+//                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+//
+//                    if (pm.isIgnoringBatteryOptimizations(packageName)) {
+//                        Toast.makeText(this, "App excluded from battery optimizations", Toast.LENGTH_SHORT).show();
+//                    } else {
+//                        Toast.makeText(this, "Failed to exclude app from battery optimizations", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//                break;
+//        }
+//    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -181,9 +208,6 @@ public class MainActivity extends AppCompatActivity {
         checkServiceStatus();
 
 
-
-//        isAdminOn = devicePolicyManager.isAdminActive(componentName);
-//        deviceAdminSwitch.setChecked(isAdminOn);
     }
 
     @Override
@@ -245,35 +269,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void promptForPasswordAndDisableAdmin() {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle("Enter Password");
-
-        final android.widget.EditText passwordInput = new android.widget.EditText(this);
-        passwordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        builder.setView(passwordInput);
-
-        builder.setPositiveButton("Confirm", (dialog, which) -> {
-            String enteredPassword = passwordInput.getText().toString().trim();
-            // Replace "admin123" with your stored password logic
-            if (enteredPassword.equals(getSavedPassword())) {
-                // Disable Device Admin
-                devicePolicyManager.removeActiveAdmin(componentName);
-                Toast.makeText(MainActivity.this, "Admin permissions disabled.", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(MainActivity.this, "Incorrect password!", Toast.LENGTH_SHORT).show();
-                deviceAdminSwitch.setChecked(true); // Re-enable switch since admin wasn't disabled
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> {
-            dialog.dismiss();
-            deviceAdminSwitch.setChecked(true); // Re-enable switch since action was cancelled
-        });
-
-        builder.setCancelable(false);
-        builder.show();
-    }
 
     private String getSavedPassword() {
         android.content.SharedPreferences sharedPreferences = getSharedPreferences("AdminPrefs", Context.MODE_PRIVATE);
