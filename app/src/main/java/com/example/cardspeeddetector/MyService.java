@@ -37,7 +37,7 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
 
     private static final String TAG = "MyService";
     private static final String CHANNEL_ID = "SpeedServiceChannel";
-    private static final float SPEED_THRESHOLD_KMH = 0.30f; // Threshold set to 1.0 km/h
+    private static final float SPEED_THRESHOLD_KMH = 3.10f; // Threshold set to 1.0 km/h
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private PowerManager.WakeLock wakeLock;
