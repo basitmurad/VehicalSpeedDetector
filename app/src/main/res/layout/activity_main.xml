@@ -28,46 +28,53 @@
             android:padding="16dp"
             android:layout_gravity="center">
 
-            <TextView
-                android:id="@+id/textView1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Hello World!"
-                android:padding="10dp"
-                android:textSize="25sp"
-                android:textColor="@android:color/white"/>
 
-            <Button
+
+            <androidx.appcompat.widget.AppCompatButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="START SERVICE"
+                android:text="@string/start_service"
                 android:id="@+id/button1"
-                android:layout_margin="10dp"/>
+                android:textColor="@color/white"
 
-            <Button
+
+                android:background="@drawable/editext_back"
+                android:backgroundTint="#3F51B5"
+
+                android:layout_margin="24dp"
+              />
+
+            <androidx.appcompat.widget.AppCompatButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="STOP SERVICE"
-                android:id="@+id/button2"
-                android:layout_margin="10dp"/>
+                android:background="@drawable/editext_back"
+                android:backgroundTint="#3F51B5"
+                android:textColor="@color/white"
 
-            <Button
-                android:id="@+id/button_shutdown"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Turn Off Screen"
-                android:layout_marginTop="20dp"/>
+                android:id="@+id/button2"
+                android:layout_margin="10dp"
+                tools:ignore="HardcodedText" />
+
+<!--            <Button-->
+<!--                android:id="@+id/button_shutdown"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="@string/turn_off_screen"-->
+<!--                android:layout_marginTop="20dp"/>-->
 
             <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="50dp"
+                android:background="@drawable/editext_back"
+                android:backgroundTint="@color/white"
                 android:layout_marginStart="30dp">
                 <TextView
                     android:id="@+id/text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Device Admin :"
+                    android:text="@string/device_admin"
                     android:layout_centerVertical="true"
                     android:textSize="25sp"
                     android:textStyle="bold"
@@ -76,7 +83,7 @@
                     android:id="@+id/admin_switch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_toRightOf="@id/text"
+                    android:layout_toEndOf="@id/text"
                     android:layout_marginStart="20dp"
                     app:showText="true"
                     android:layout_marginTop="5dp"/>

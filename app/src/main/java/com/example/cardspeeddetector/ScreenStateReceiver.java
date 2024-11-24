@@ -36,7 +36,7 @@ import android.content.Intent;
 
 public class ScreenStateReceiver extends BroadcastReceiver {
 
-    private MyService myService;
+    private final MyService myService;
 
     public ScreenStateReceiver(MyService service) {
         myService = service;
@@ -60,28 +60,4 @@ public class ScreenStateReceiver extends BroadcastReceiver {
 }
 
 
-//public class ScreenStateReceiver extends BroadcastReceiver {
-//
-//    private MyService myService;
-//
-//    public ScreenStateReceiver(MyService service) {
-//        // Constructor to pass the service object to the receiver
-//        myService = service;
-//    }
-//
-//    @Override
-//    public void onReceive(Context context, Intent intent) {
-//        String action = intent.getAction();
-//        if (Intent.ACTION_SCREEN_OFF.equals(action)) {
-//            // Stop tracking speed when the screen is off
-//            if (myService != null) {
-//                myService.stopTrackingSpeed();
-//            }
-//        } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
-//            // Start tracking speed when the screen is on
-//            if (myService != null) {
-//                myService.startTrackingSpeed();
-//            }
-//        }
-//    }
-//}
+

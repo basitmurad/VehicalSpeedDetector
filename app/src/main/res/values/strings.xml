@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Card Speed Detector</string>
+    <string name="drive_safe_locking_distractions_for_safer_roads">Drive Safe,\nLocking Distractions \nfor Safer Roads</string>
+    <string name="stay_alert_ndrive_safe_nyour_safety_matters">Stay Alert, \nDrive Safe, \nYour Safety Matters</string>
+    <string name="this_app_requires_admin_permission_to_ensure_functionality">This app requires Admin Permission to ensure functionality.</string>
+    <string name="set_passwood">Set Passwood</string>
+    <string name="todo">TODO</string>
+    <string name="start_service">START SERVICE</string>
+    <string name="turn_off_screen">Turn Off Screen</string>
+    <string name="device_admin">Device Admin :</string>
 </resources>

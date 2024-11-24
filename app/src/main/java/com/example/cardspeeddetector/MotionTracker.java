@@ -1,85 +1,4 @@
-package com.example.cardspeeddetector;//package com.example.speedometer;
-//
-//import android.Manifest;
-//import android.content.Context;
-//import android.content.pm.PackageManager;
-//import android.location.Location;
-//import android.location.LocationListener;
-//import android.location.LocationManager;
-//import androidx.annotation.NonNull;
-//import androidx.core.app.ActivityCompat;
-//
-//public class MotionTracker {
-//    private Context context;
-//    private LocationManager locationManager;
-//    private LocationListener locationListener;
-//    private MotionTrackerListener motionTrackerListener;
-//
-//    // Constructor to initialize context and listener
-//    public MotionTracker(Context context, MotionTrackerListener listener) {
-//        this.context = context;
-//        this.motionTrackerListener = listener;
-//        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-//        initializeLocationListener();
-//    }
-//
-//    // Initialize the location listener
-//    private void initializeLocationListener() {
-//        locationListener = new LocationListener() {
-//            @Override
-//            public void onLocationChanged(@NonNull Location location) {
-//                float speed = location.getSpeed(); // Speed in meters/second
-//                double latitude = location.getLatitude();
-//                double longitude = location.getLongitude();
-//                float accuracy = location.getAccuracy();
-//
-//                // Notify the listener with the updated data
-//                if (motionTrackerListener != null) {
-//                    motionTrackerListener.onMotionDetected(speed, latitude, longitude, accuracy);
-//                }
-//            }
-//
-//            @Override
-//            public void onStatusChanged(String provider, int status, android.os.Bundle extras) {
-//                // No action needed
-//            }
-//
-//            @Override
-//            public void onProviderEnabled(@NonNull String provider) {
-//                // No action needed
-//            }
-//
-//            @Override
-//            public void onProviderDisabled(@NonNull String provider) {
-//                // No action needed
-//            }
-//        };
-//    }
-//
-//    // Start tracking motion (request location updates)
-//    public void startTracking() {
-//        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-//                ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            // Handle permission request
-//            return;
-//        }
-//
-//        // Request location updates from the GPS provider
-//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener); // Every second, min distance of 1 meter
-//    }
-//
-//    // Stop tracking motion
-//    public void stopTracking() {
-//        locationManager.removeUpdates(locationListener);
-//    }
-//
-//    // Interface to notify the caller about motion events
-//    public interface MotionTrackerListener {
-//        void onMotionDetected(float speed, double latitude, double longitude, float accuracy);
-//    }
-//}
-
-
+package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.speedometer;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -127,7 +46,7 @@ public class MotionTracker {
                 }
 
                 // Log motion start/stop based on speed
-                if (speed > 0.1f) {  // If speed exceeds threshold, consider it as motion start
+                if (speed > 3.10f) {  // If speed exceeds threshold, consider it as motion start
                     if (!isMotionActive) {
                         isMotionActive = true; // Motion started
                         Log.d("MotionTracker", "Motion started! Speed: " + speed + " m/s");
