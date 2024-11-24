@@ -1,5 +1,7 @@
 package com.example.cardspeeddetector;////package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.cardspeeddetector;////package com.example.cardspeeddetector;
 
+import static com.example.cardspeeddetector.MainActivity.SERVICE_RUNNING_KEY;
+
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -10,6 +12,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -93,21 +96,34 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-
-        if (checkLocationPermissions()) {
-            startLocationUpdates();
-            motionTracker.startTracking();
-            startForegroundService();
+        SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
+        boolean isServiceRunning = prefs.getBoolean(SERVICE_RUNNING_KEY, false);
+        if (isServiceRunning) {
+            if (checkLocationPermissions()) {
+                startLocationUpdates();
+                motionTracker.startTracking();
+                startForegroundService();
+            } else {
+                Log.e(TAG, "Permissions not granted. Cannot start location updates.");
+                requestPermissions();
+            }
         } else {
-            Log.e(TAG, "Permissions not granted. Cannot start location updates.");
-            // Handle permission denial (e.g., notify user to grant permissions)
-            requestPermissions();
+            stopSelf(); // Stop the service if it should not run
         }
-
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .edit()
-                .putBoolean("service_running", true)
-                .apply();
+//        if (checkLocationPermissions()) {
+//            startLocationUpdates();
+//            motionTracker.startTracking();
+//            startForegroundService();
+//        } else {
+//            Log.e(TAG, "Permissions not granted. Cannot start location updates.");
+//            // Handle permission denial (e.g., notify user to grant permissions)
+//            requestPermissions();
+//        }
+//
+//        // Send broadcast to notify the activity
+//        Intent broadcastIntent = new Intent();
+//        broadcastIntent.setAction("restart_service");
+//        sendBroadcast(broadcastIntent);
         return START_STICKY;
     }
 
@@ -123,6 +139,8 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
     public void onDestroy() {
         super.onDestroy();
 
+        SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
+        prefs.edit().putBoolean(SERVICE_RUNNING_KEY, false).apply();
         if (screenStateReceiver != null) {
             unregisterReceiver(screenStateReceiver);
         }
@@ -133,6 +151,13 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
             motionTracker.stopTracking();
         }
 
+        // Update the service status
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .edit()
+                .putBoolean("service_running", false)
+                .apply();
+
+        // Send broadcast to notify the activity
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction("restart_service");
         sendBroadcast(broadcastIntent);
@@ -195,17 +220,17 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
     @Override
     public void onMotionDetected(float speed, double latitude, double longitude, float accuracy) {
         Log.d(TAG, "Motion detected. Speed: " + speed + " m/s, Lat: " + latitude + ", Lon: " + longitude);
+////
+//        if (speed > SPEED_THRESHOLD_KMH) {
+//            releaseWakeLock();
 //
-        if (speed > SPEED_THRESHOLD_KMH) {
-            releaseWakeLock();
-
-            startVibration();
-            lockDevice();
-        }
-        else{
-            acquireWakeLock();
-
-        }
+//            startVibration();
+//            lockDevice();
+//        }
+//        else{
+//            acquireWakeLock();
+//
+//        }
 
 
     }
@@ -228,6 +253,7 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
         }
     }
 
+    @SuppressLint("WakelockTimeout")
     private void acquireWakeLock() {
         if (wakeLock == null || !wakeLock.isHeld()) {
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
@@ -278,16 +304,3 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
 }
 
 
-////<!--<?xml version="1.0" encoding="utf-8"?>-->
-////<!--<device-admin xmlns:android="http://schemas.android.com/apk/res/android">-->
-////<!--    <uses-policies>-->
-////<!--        <force-lock/>-->
-////<!--        <wipe-data />-->
-////<!--        <disable-camera />-->
-////<!--        <reset-password />-->
-////<!--    </uses-policies>-->
-////<!--</device-admin>-->
-//
-//
-//
-//

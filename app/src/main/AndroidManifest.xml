@@ -69,15 +69,7 @@
         </receiver>
 
         <!-- Boot Completed Receiver -->
-        <receiver
-            android:name=".BootReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </receiver>
+
         <!-- Service Declaration -->
         <service
             android:name=".MyService"
@@ -87,19 +79,13 @@
             android:exported="false">
             <!-- Ensure you declare the necessary permission in the manifest -->
         </service>
-        <receiver android:name=".RestartServiceReceiver"
-            android:exported="true"
-            android:permission="TODO"
-            tools:ignore="ExportedReceiver">
+        <receiver android:name=".ScreenUnlockReceiver" android:enabled="true"
+            android:exported="true">
             <intent-filter>
-                <action android:name="restart_service" />
+                <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
 
-        <!--        <service-->
-<!--            android:name=".MyService"-->
-<!--            android:enabled="true"-->
-<!--            android:foregroundServiceType="location"-->
-<!--            tools:ignore="ForegroundServicePermission" />-->
+
     </application>
 </manifest>

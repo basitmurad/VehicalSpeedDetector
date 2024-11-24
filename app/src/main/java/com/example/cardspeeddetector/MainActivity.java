@@ -7,6 +7,8 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -22,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
@@ -33,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     static TextView textView;
     private BroadcastReceiver speedReceiver;
     private static final int RESULT_ENABLE = 123;
+    public static final String SERVICE_RUNNING_KEY = "service_running";
 
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;
@@ -41,25 +45,35 @@ public class MainActivity extends AppCompatActivity {
     private boolean isAdminOn;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
 
+
+    private final BroadcastReceiver serviceStatusReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Check the service status based on shared preferences
+            checkServiceStatus();
+        }
+    };
     String password;
     private static final int BATTERY_OPTIMIZATION_REQUEST_CODE = 200;
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
-//        password = getSavedPassword();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("restart_service");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(serviceStatusReceiver, filter, Context.RECEIVER_EXPORTED);
+        }
 //
-//        Log.d("Passord" , password);
-//        textView = findViewById(R.id.textView1);
         Button button1 = findViewById(R.id.button1);
         Button button2 = findViewById(R.id.button2);
-//        Button lockButton = findViewById(R.id.button_shutdown);
 
 
-//        Toast.makeText(this, "password" +password, Toast.LENGTH_SHORT).show();
-        deviceAdminSwitch = findViewById(R.id.admin_switch);
+//        deviceAdminSwitch = findViewById(R.id.admin_switch);
 
         checkAndRequestPermissions(); // Check and request location permissions
         checkAndRequestBatteryOptimization();
@@ -68,46 +82,30 @@ public class MainActivity extends AppCompatActivity {
 
         componentName =  new ComponentName(this,  MyDeviceAdminReceiver.class);
 
-        deviceAdminSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                if (isChecked) {
-                    // Enable Device Admin
-                    Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-                    intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
-                    intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "For lock screen");
-                    startActivityForResult(intent, RESULT_ENABLE);
-                } else {
-                    // Prompt for Password
-                    promptForPasswordAndDisableAdmin();
-                }
-            }
-        });
-
 //        deviceAdminSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 //            @Override
-//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-//                if(b){
+//            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+//                if (isChecked) {
+//                    // Enable Device Admin
 //                    Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
 //                    intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
 //                    intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "For lock screen");
 //                    startActivityForResult(intent, RESULT_ENABLE);
-//                }
-//                else{
-//                    devicePolicyManager.removeActiveAdmin(componentName);
+//                } else {
+//                    // Prompt for Password
+//                    promptForPasswordAndDisableAdmin();
 //                }
 //            }
 //        });
 
-
-//        textView.setText("Current Time: " + new Date());
 
         Intent intent = new Intent(MainActivity.this, MyService.class);
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d("MainActivity", "Start Service clicked");
-
+                SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
+                prefs.edit().putBoolean(SERVICE_RUNNING_KEY, true).apply();
                 startService(intent);
             }
         });
@@ -115,22 +113,22 @@ public class MainActivity extends AppCompatActivity {
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("MainActivity", "Stop Service clicked");
-                stopService(intent);            }
+                promptForPasswordAndStopService();
+
+//                Log.d("MainActivity", "Stop Service clicked");
+//                stopService(intent);
+//
+//                Log.d("MainActivity", "Stop Service clicked");
+//
+//                // Store that the service is stopped
+//                SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
+//                prefs.edit().putBoolean(SERVICE_RUNNING_KEY, false).apply();
+//
+//                stopService(intent);
+                }
         });
 
-//        lockButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                if (devicePolicyManager.isAdminActive(componentName)) {
-//                    // Lock the device
-//                    devicePolicyManager.lockNow();
-//                } else {
-//                    // Inform the user that admin privileges are not enabled
-//                    Toast.makeText(MainActivity.this, "You need to enable device admin..!", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-//        });
+
     }
 
     @SuppressLint("ObsoleteSdkInt")
@@ -147,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 
 
     @SuppressLint("ObsoleteSdkInt")
@@ -176,46 +173,27 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
     }
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        switch (requestCode) {
-//            case RESULT_ENABLE:
-//                if (resultCode == Activity.RESULT_OK) {
-//                    Toast.makeText(this, "You have enabled device admin features", Toast.LENGTH_SHORT).show();
-//                } else {
-//                    Toast.makeText(this, "Problem to enable device admin features", Toast.LENGTH_SHORT).show();
-//                }
-//                break;
-//        }
-//    }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        // Check the status of the service
-        boolean isServiceRunning = PreferenceManager.getDefaultSharedPreferences(this)
-                .getBoolean("service_running", false);
+        checkServiceStatus();
 
-        if (isServiceRunning) {
-            Log.d("MainActivity", "Service is running");
-        } else {
-            Log.d("MainActivity", "Service is stopped");
-        }
 
-        isAdminOn = devicePolicyManager.isAdminActive(componentName);
-        deviceAdminSwitch.setChecked(isAdminOn);
+
+//        isAdminOn = devicePolicyManager.isAdminActive(componentName);
+//        deviceAdminSwitch.setChecked(isAdminOn);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(serviceStatusReceiver);
+        Intent intent = new Intent(MainActivity.this, MyService.class);
 
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .edit()
-                .putBoolean("service_running", false)
-                .apply();
+        startService(intent);
+
     }
 
     @SuppressLint("ObsoleteSdkInt")
@@ -235,6 +213,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void promptForPasswordAndStopService() {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Enter Password");
+
+        final android.widget.EditText passwordInput = new android.widget.EditText(this);
+        passwordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(passwordInput);
+
+        builder.setPositiveButton("Confirm", (dialog, which) -> {
+            String enteredPassword = passwordInput.getText().toString().trim();
+
+            if (enteredPassword.equals(getSavedPassword())) {
+                // Stop the service
+                SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
+                prefs.edit().putBoolean(SERVICE_RUNNING_KEY, false).apply();
+
+                Intent intent = new Intent(MainActivity.this, MyService.class);
+                stopService(intent);
+
+                Toast.makeText(MainActivity.this, "Service stopped.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, "Incorrect password!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        builder.setCancelable(false);
+        builder.show();
+    }
 
 
     private void promptForPasswordAndDisableAdmin() {
@@ -270,5 +278,19 @@ public class MainActivity extends AppCompatActivity {
     private String getSavedPassword() {
         android.content.SharedPreferences sharedPreferences = getSharedPreferences("AdminPrefs", Context.MODE_PRIVATE);
         return sharedPreferences.getString("admin_password", "default123"); // Default password if none is set
+    }
+
+    private void checkServiceStatus() {
+        SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
+        boolean isServiceRunning = prefs.getBoolean(SERVICE_RUNNING_KEY, false);
+
+        if (isServiceRunning) {
+            Toast.makeText(this, "Service is running", Toast.LENGTH_SHORT).show();
+            Log.d("Service" ,"Service is running");
+        } else {
+            Log.d("Service" ,"Service is stopped");
+
+            Toast.makeText(this, "Service is stopped", Toast.LENGTH_SHORT).show();
+        }
     }
 }
