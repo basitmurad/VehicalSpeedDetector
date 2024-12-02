@@ -33,16 +33,12 @@ import android.Manifest;
 
 public class MainActivity extends AppCompatActivity {
     @SuppressLint("StaticFieldLeak")
-    static TextView textView;
-    private BroadcastReceiver speedReceiver;
     private static final int RESULT_ENABLE = 123;
     public static final String SERVICE_RUNNING_KEY = "service_running";
 
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;
-    private SwitchCompat deviceAdminSwitch;
 
-    private boolean isAdminOn;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 100;
 
 
@@ -53,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
             checkServiceStatus();
         }
     };
-    String password;
     private static final int BATTERY_OPTIMIZATION_REQUEST_CODE = 200;
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
@@ -68,12 +63,11 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(serviceStatusReceiver, filter, Context.RECEIVER_EXPORTED);
         }
-//
+
         Button button1 = findViewById(R.id.button1);
         Button button2 = findViewById(R.id.button2);
 
 
-//        deviceAdminSwitch = findViewById(R.id.admin_switch);
 
         checkAndRequestPermissions(); // Check and request location permissions
         checkAndRequestBatteryOptimization();
@@ -86,15 +80,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         Intent intent = new Intent(MainActivity.this, MyService.class);
-//        button1.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Log.d("MainActivity", "Start Service clicked");
-//                SharedPreferences prefs = getSharedPreferences("com.example.cardspeeddetector", MODE_PRIVATE);
-//                prefs.edit().putBoolean(SERVICE_RUNNING_KEY, true).apply();
-//                startService(intent);
-//            }
-//        });
+
 
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -128,6 +114,13 @@ public class MainActivity extends AppCompatActivity {
                 }
         });
 
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        checkAndRequestPermissions(); // Check and request location permissions
 
     }
 
@@ -174,32 +167,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-//    @SuppressLint("ObsoleteSdkInt")
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        switch (requestCode) {
-//            case RESULT_ENABLE:
-//                if (resultCode == Activity.RESULT_OK) {
-//                    Toast.makeText(this, "You have enabled device admin features", Toast.LENGTH_SHORT).show();
-//                } else {
-//                    Toast.makeText(this, "Problem enabling device admin features", Toast.LENGTH_SHORT).show();
-//                }
-//                break;
-//            case BATTERY_OPTIMIZATION_REQUEST_CODE:
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                    String packageName = getPackageName();
-//                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-//
-//                    if (pm.isIgnoringBatteryOptimizations(packageName)) {
-//                        Toast.makeText(this, "App excluded from battery optimizations", Toast.LENGTH_SHORT).show();
-//                    } else {
-//                        Toast.makeText(this, "Failed to exclude app from battery optimizations", Toast.LENGTH_SHORT).show();
-//                    }
-//                }
-//                break;
-//        }
-//    }
+
 
     @Override
     protected void onResume() {

@@ -10,12 +10,14 @@
     <!-- FrameLayout to overlay ImageView and other views -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:ignore="UselessParent">
 
         <!-- ImageView used as background -->
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:contentDescription="TODO"
             android:src="@drawable/lockimg"
             android:layout_gravity="center"
             android:scaleType="centerCrop"/>

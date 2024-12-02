@@ -1,3 +1,194 @@
+//package com.example.cardspeeddetector;
+//
+//import android.app.admin.DevicePolicyManager;
+//import android.content.ComponentName;
+//import android.content.Context;
+//import android.content.Intent;
+//import android.content.SharedPreferences;
+//import android.net.Uri;
+//import android.os.Bundle;
+//import android.os.Handler;
+//import android.os.PowerManager;
+//import android.text.TextUtils;
+//import android.widget.Toast;
+//import android.provider.Settings;
+//import android.location.LocationManager;
+//
+//import androidx.appcompat.app.AppCompatActivity;
+//
+//import com.example.cardspeeddetector.databinding.ActivityAdminPermissionBinding;
+//
+//public class AdminPermissionActivity extends AppCompatActivity {
+//
+//    private static final int RESULT_ENABLE = 123;
+//    private static final int REQUEST_BATTERY_OPTIMIZATION = 124;
+//    private static final int REQUEST_GPS = 125;
+//    private DevicePolicyManager devicePolicyManager;
+//    private ComponentName componentName;
+//    private ActivityAdminPermissionBinding binding;
+//
+//    @Override
+//    protected void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//
+//        binding = ActivityAdminPermissionBinding.inflate(getLayoutInflater());
+//        setContentView(binding.getRoot());
+//
+//        devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+//        componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
+//
+//        binding.grantAdminButton.setOnClickListener(view -> {
+//            String enteredPassword = binding.passwordInput.getText().toString().trim();
+//
+//            if (TextUtils.isEmpty(enteredPassword)) {
+//                Toast.makeText(this, "Please enter a password to continue!", Toast.LENGTH_SHORT).show();
+//            } else {
+//                savePassword(enteredPassword);
+//                requestAdminPrivileges();
+//            }
+//        });
+//
+//    }
+//
+//
+//
+//
+//
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        new Handler().postDelayed(this::checkPermissionsAndNavigate, 1000);
+//
+//    }
+//
+//    // Save the password to SharedPreferences
+//    private void savePassword(String password) {
+//        SharedPreferences sharedPreferences = getSharedPreferences("AdminPrefs", MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//        editor.putString("admin_password", password);
+//        editor.apply();
+//    }
+//
+//    // Check if a password is already saved
+//    private boolean isPasswordSet() {
+//        SharedPreferences sharedPreferences = getSharedPreferences("AdminPrefs", MODE_PRIVATE);
+//        return sharedPreferences.contains("admin_password");
+//    }
+//
+//    // Request admin privileges from the user
+//    private void requestAdminPrivileges() {
+//        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+//        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
+//        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Admin access is required for enhanced features.");
+//        startActivityForResult(intent, RESULT_ENABLE);
+//    }
+//
+//    // Check and request for Battery Optimization and GPS permissions
+//    private void requestPermissionsIfNotGranted() {
+//        // Check Battery Optimization permission
+//        if (!isBatteryOptimized()) {
+//            requestBatteryOptimizationPermission();
+//        }
+//
+//        // Check GPS permission
+//        if (!isGpsEnabled()) {
+//            requestGpsPermission();
+//        }
+//    }
+//
+//    // Check if battery optimization is ignored
+//    private boolean isBatteryOptimized() {
+//        String packageName = getPackageName();
+//        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+//        return powerManager.isIgnoringBatteryOptimizations(packageName);
+//    }
+//
+//    // Request Battery Optimization permission
+//    private void requestBatteryOptimizationPermission() {
+//        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+//        intent.setData(Uri.parse("package:" + getPackageName()));
+//        startActivityForResult(intent, REQUEST_BATTERY_OPTIMIZATION);
+//    }
+//
+//    // Check if GPS is enabled
+//    private boolean isGpsEnabled() {
+//        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+//    }
+//
+//    // Request GPS permission
+//    private void requestGpsPermission() {
+//        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+//        startActivityForResult(intent, REQUEST_GPS);
+//    }
+//
+//
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        if (requestCode == RESULT_ENABLE) {
+//            if (resultCode == RESULT_OK) {
+//                Toast.makeText(this, "Admin privileges granted!", Toast.LENGTH_SHORT).show();
+//            } else {
+//                Toast.makeText(this, "Admin privileges are required. Please enable them.", Toast.LENGTH_LONG).show();
+//            }
+//        } else if (requestCode == REQUEST_BATTERY_OPTIMIZATION) {
+//            if (isBatteryOptimized()) {
+//                Toast.makeText(this, "Battery optimization disabled.", Toast.LENGTH_SHORT).show();
+//            }
+//        } else if (requestCode == REQUEST_GPS) {
+//            if (isGpsEnabled()) {
+//                Toast.makeText(this, "GPS is enabled.", Toast.LENGTH_SHORT).show();
+//            }
+//        }
+//
+//        // Recheck permissions after every action
+//        checkPermissionsAndNavigate();
+//    }
+//
+//    private void checkPermissionsAndNavigate() {
+//        // Check if admin privileges are active
+//        boolean isAdminActive = devicePolicyManager.isAdminActive(componentName);
+//        // Check if the password is set
+//        boolean isPasswordSet = isPasswordSet();
+//        // Check if GPS is enabled
+//        boolean isGpsEnabled = isGpsEnabled();
+//        // Check if battery optimization is ignored
+//        boolean isBatteryOptimized = isBatteryOptimized();
+//
+//        if (isAdminActive && isPasswordSet && isGpsEnabled && isBatteryOptimized) {
+//            // All conditions are met, navigate to the next screen
+//            navigateToNextScreen();
+//        } else {
+//            // Notify the user of missing conditions
+//            if (!isAdminActive) {
+//                Toast.makeText(this, "Admin privileges are required.", Toast.LENGTH_LONG).show();
+//                requestAdminPrivileges(); // Prompt for admin privileges
+//            }
+//            if (!isPasswordSet) {
+//                Toast.makeText(this, "Please set a password to continue.", Toast.LENGTH_LONG).show();
+//            }
+//            if (!isGpsEnabled) {
+//                Toast.makeText(this, "Please enable GPS to continue.", Toast.LENGTH_LONG).show();
+//                requestGpsPermission(); // Prompt for GPS
+//            }
+//            if (!isBatteryOptimized) {
+//                Toast.makeText(this, "Please disable battery optimization to continue.", Toast.LENGTH_LONG).show();
+//                requestBatteryOptimizationPermission(); // Prompt for battery optimization
+//            }
+//        }
+//    }
+//
+//    // Navigate to the next activity only when all checks are passed
+//    private void navigateToNextScreen() {
+//        Intent intent = new Intent(AdminPermissionActivity.this, MainActivity.class);
+//        startActivity(intent);
+//        finish();
+//    }
+//
+//
+//}
 package com.example.cardspeeddetector;
 
 import android.app.admin.DevicePolicyManager;
@@ -39,16 +230,17 @@ public class AdminPermissionActivity extends AppCompatActivity {
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
-        binding.passwordInput.setEnabled(false);
-        binding.grantAdminButton.setEnabled(false);
+//        binding.passwordInput.setEnabled(false);
+//        binding.grantAdminButton.setEnabled(false);
 
-        requestAdminPrivileges();
 
         // Check if password is already set
         if (isPasswordSet()) {
             // Request admin privileges directly if password exists
             navigateToNextScreen();
         } else {
+//            requestAdminPrivileges();
+
             // Prompt the user to create a password
             binding.grantAdminButton.setOnClickListener(view -> {
                 String enteredPassword = binding.passwordInput.getText().toString().trim();
