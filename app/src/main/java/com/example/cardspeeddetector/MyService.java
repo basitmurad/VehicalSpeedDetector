@@ -1,6 +1,7 @@
 package com.example.cardspeeddetector;////package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.cardspeeddetector;//package com.example.cardspeeddetector;////package com.example.cardspeeddetector;
 
 import static com.example.cardspeeddetector.MainActivity.SERVICE_RUNNING_KEY;
+import android.Manifest;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -14,6 +15,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
@@ -25,6 +27,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -36,7 +39,7 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
 
     private static final String TAG = "MyService";
     private static final String CHANNEL_ID = "SpeedServiceChannel";
-    private static final float SPEED_THRESHOLD_KMH = 3.10f; // Threshold set to 1.0 km/h
+    private static final float SPEED_THRESHOLD_KMH = 3.30f; // Threshold set to 1.0 km/h
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private PowerManager.WakeLock wakeLock;
@@ -287,7 +290,14 @@ public class MyService extends Service implements MotionTracker.MotionTrackerLis
 
 
 
-
+    private boolean checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 (API 33) and later
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+        } else {
+            // For Android versions below Android 13, no need to request permission
+            return true;
+        }
+    }
 }
 
 

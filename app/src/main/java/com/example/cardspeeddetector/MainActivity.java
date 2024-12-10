@@ -23,6 +23,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -69,7 +70,9 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        checkAndRequestPermissions(); // Check and request location permissions
+        checkAndRequestPermissions();
+        checkAndRequestNotificationPermission();
+// Check and request location permissions
         checkAndRequestBatteryOptimization();
 
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
@@ -256,4 +259,32 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Service is stopped", Toast.LENGTH_SHORT).show();
         }
     }
+
+    @SuppressLint("ObsoleteSdkInt")
+    private void checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Check if the permission is not granted
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // Request permission for notifications
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101); // Request code 101 for notifications
+            }
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Handle the notification permission request result
+        if (requestCode == 101) {  // 101 is the request code for notification permission
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted
+                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                // Permission denied
+                Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
 }
